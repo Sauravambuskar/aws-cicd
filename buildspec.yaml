@@ -1,12 +1,21 @@
 version: 0.2
 
+# NOTE:
+# 1) REPOSITORY_URI should be your full ECR repository URI.
+# 2) In imagedefinitions.json, the "name" value must match your ECS task definition container name.
+
 phases:
   pre_build:
     commands:
       - mvn clean install
       - echo Logging in to Amazon ECR...
       - aws --version
-      - REPOSITORY_URI=339713037827.dkr.ecr.ap-south-1.amazonaws.com/javatechie-registry
+      # ECR repository short name
+      - ECR_REPOSITORY_NAME=javatechie-registry
+      # ECR repository full URI (required for docker login/tag/push)
+      - REPOSITORY_URI=185137893827.dkr.ecr.ap-south-1.amazonaws.com/javatechie-registry
+      # CHANGE THIS: Must match ECS task definition container name (not ECR repo name)
+      - ECS_CONTAINER_NAME=spring-app
       - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $REPOSITORY_URI
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
@@ -23,7 +32,8 @@ phases:
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Writing image definitions file...
-      - printf '[{"name":"spring-app","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      # Uses ECS container name + pushed image URI for ECS deploy stage
+      - printf '[{"name":"%s","imageUri":"%s"}]' $ECS_CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
       - cat imagedefinitions.json
 
 artifacts:
