@@ -1,10 +1,14 @@
-# Use the official OpenJDK 17 image from Docker Hub
-FROM openjdk:17
-# Set working directory inside the container
+# Use supported Java 17 base image
+FROM eclipse-temurin:17-jdk
+
+# Set working directory
 WORKDIR /app
-# Copy the compiled Java application JAR file into the container
-COPY ./target/spring-app.jar /app
-# Expose the port the Spring Boot application will run on
+
+# Copy JAR file into container and rename properly
+COPY target/app.jar app.jar
+
+# Expose application port
 EXPOSE 8080
-# Command to run the application
-CMD ["java", "-jar", "spring-app.jar"]
+
+# Run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]
