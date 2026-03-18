@@ -10,14 +10,16 @@ phases:
       - mvn clean install
       - echo Logging in to Amazon ECR...
       - aws --version
+      # AWS account and region for ECR
+      - AWS_ACCOUNT_ID=185137893827
+      - AWS_DEFAULT_REGION=ap-south-1
       # ECR repository short name
       - ECR_REPOSITORY_NAME=javatechie-registry
       # ECR repository full URI (required for docker login/tag/push)
-      - REPOSITORY_URI=185137893827.dkr.ecr.ap-south-1.amazonaws.com/javatechie-registry
+      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY_NAME
       # CHANGE THIS: Must match ECS task definition container name (not ECR repo name)
-      - ECS_CONTAINER_NAME=spring-app
-      - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $REPOSITORY_URI
-      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - ECS_CONTAINER_NAME=javatechie-registry
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
       - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
   build:
     commands:
